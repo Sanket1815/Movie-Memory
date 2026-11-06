@@ -6,6 +6,11 @@ Built with Next.js 16 (App Router), React 19, Tailwind 4, PostgreSQL 16, Prisma 
 Auth.js v5 (Google) and the OpenAI API. Implements the base app plus **Variant A
 (backend: caching and correctness)**.
 
+> **Live app:** https://VERCEL_URL_HERE
+> (sign-in is limited to Google test users while the OAuth app is in "Testing"; ask for access)
+>
+> **Repository:** https://github.com/Sanket1815/Movie-Memory
+>
 > **Demo video:** _link to be added_
 
 ---
@@ -22,19 +27,57 @@ PostgreSQL, OAuth, external API integration, serverless concurrency, security).
 
 ---
 
-## 2. Setup
+## 2. Local setup
 
-**Requires:** Node **24** (see `.nvmrc`; Prisma 7 needs ≥ 22.18) and Docker.
+### Prerequisites
+
+- **Node.js 24** (see `.nvmrc`). Prisma 7 refuses to run on Node < 22.18; check with
+  `node -v`. Install from https://nodejs.org, `nvm install 24`, or on Windows
+  `winget install OpenJS.NodeJS.LTS`.
+- **Docker** (Docker Desktop on Windows/macOS) for the local Postgres.
+- A **Google OAuth client** and an **OpenAI API key** with credit (see below).
+
+### Steps
 
 ```bash
-cp .env.example .env        # fill in the values (table below)
-docker compose up -d        # Postgres 16 on localhost:54330 (+ a separate test database)
-npm install                 # also generates the Prisma client (postinstall)
-npx prisma migrate dev      # creates the tables
-npm run dev                 # http://localhost:3000
+# 1. Get the code
+git clone https://github.com/Sanket1815/Movie-Memory.git
+cd Movie-Memory
+
+# 2. Configure environment variables
+cp .env.example .env              # Windows PowerShell: Copy-Item .env.example .env
+#    then edit .env: set AUTH_SECRET, AUTH_GOOGLE_ID, AUTH_GOOGLE_SECRET, OPENAI_API_KEY
+#    (DATABASE_URL and DATABASE_URL_TEST are already correct for docker-compose)
+
+# 3. Start Postgres 16 (localhost:54330) and the separate test database
+docker compose up -d
+
+# 4. Install dependencies (also generates the Prisma client via postinstall)
+npm install
+
+# 5. Create the tables
+npx prisma migrate dev
+
+# 6. Run the app
+npm run dev                       # http://localhost:3000
 ```
 
+Then open http://localhost:3000 → **Sign in with Google** → enter a favorite movie → the
+dashboard shows your profile, movie and a fun fact.
+
 Postgres is exposed on host port **54330** (not 5432) to avoid clashing with a local install.
+To stop it: `docker compose down` (data is kept in the `pgdata` volume; add `-v` to wipe it).
+
+### Troubleshooting
+
+| Symptom | Fix |
+|---|---|
+| `TypeError: (0, Pt.styleText) is not a function` from Prisma | Node is too old; install Node 24 and open a new terminal |
+| Server won't start: "Invalid environment variables" | A value in `.env` is missing; the message lists which |
+| Google shows `redirect_uri_mismatch` | Redirect URI must be exactly `http://localhost:3000/api/auth/callback/google` |
+| Google shows `access_denied` | Add your account under **Audience → Test users** in Google Cloud |
+| Fact card says "We couldn't come up with a fact" | OpenAI call failed; check the key and that the account has credit |
+| `Port 3000 is in use` | Stop the other app, or run `npm run dev -- -p 3001` (and register that port in Google) |
 
 ### Environment variables
 
@@ -419,21 +462,53 @@ the production build on every push and pull request.
 
 ## 10. Deployment (Vercel + Neon)
 
-1. **Database:** create a Neon (or other hosted Postgres) database. Use the **pooled**
-   connection string as `DATABASE_URL` (serverless functions open many short-lived
-   connections).
-2. **Migrations:** run against the **direct** (non-pooled) connection string before
-   deploying a schema change: `DATABASE_URL="<direct url>" npx prisma migrate deploy`.
-3. **Vercel:** import the repo and set `DATABASE_URL`, `AUTH_SECRET`, `AUTH_GOOGLE_ID`,
-   `AUTH_GOOGLE_SECRET`, `OPENAI_API_KEY` (optionally `OPENAI_MODEL`). The default build
-   (`npm install` → postinstall `prisma generate` → `next build`) needs no changes.
-4. **Google OAuth:** add origin `https://<your-domain>` and redirect URI
-   `https://<your-domain>/api/auth/callback/google`; publish the consent screen for public
-   sign-in.
-5. **Other hosts:** Auth.js trusts the host automatically on Vercel; elsewhere behind a proxy
-   set `AUTH_TRUST_HOST=true`.
+**Production:** https://VERCEL_URL_HERE — deployed on Vercel, database on Neon
+(serverless Postgres). Every push to `main` triggers a new deployment.
 
-The lease lives in Postgres, so correctness doesn't depend on how many instances run.
+### How it was deployed
+
+1. **Import the repo** at https://vercel.com/new. Vercel detects Next.js; the default build
+   (`npm install` → postinstall `prisma generate` → `next build`) needs no changes.
+2. **Database:** in the Vercel project, **Storage → Create Database → Neon**, connected to the
+   project. This adds `DATABASE_URL` (pooled, used by the app; serverless functions open many
+   short-lived connections) and `DATABASE_URL_UNPOOLED` (direct, used for migrations)
+   automatically.
+3. **Environment variables** (**Settings → Environment Variables**, Production + Preview):
+
+   | Variable | Value |
+   |---|---|
+   | `DATABASE_URL` | Added by the Neon integration |
+   | `AUTH_SECRET` | A new random secret, different from local |
+   | `AUTH_GOOGLE_ID`, `AUTH_GOOGLE_SECRET` | Same Google OAuth client as local |
+   | `OPENAI_API_KEY` | OpenAI key |
+   | `OPENAI_MODEL` | Optional (defaults to `gpt-6-luna`) |
+
+   `AUTH_URL` / `AUTH_TRUST_HOST` aren't needed: Auth.js detects Vercel automatically.
+4. **Create the tables** (once, and after any new migration), from a machine with Node 24,
+   using the **unpooled** URL (Vercel → Storage → database → `.env.local` tab):
+
+   ```powershell
+   $env:DATABASE_URL = "<DATABASE_URL_UNPOOLED>"
+   npx prisma migrate deploy
+   Remove-Item Env:DATABASE_URL   # so local dev doesn't point at production
+   ```
+
+   ```bash
+   DATABASE_URL="<DATABASE_URL_UNPOOLED>" npx prisma migrate deploy   # macOS / Linux
+   ```
+5. **Google OAuth:** in the same OAuth client, add
+   - Authorized JavaScript origin: `https://VERCEL_URL_HERE`
+   - Authorized redirect URI: `https://VERCEL_URL_HERE/api/auth/callback/google`
+
+   While the consent screen is in "Testing", only listed test users can sign in; **Publish
+   app** for public access (only basic profile/email scopes, so no Google verification).
+6. **Redeploy** (Deployments → ⋯ → Redeploy) so new environment variables take effect.
+
+Environment variable changes only apply to new deployments. On hosts other than Vercel,
+behind a proxy, also set `AUTH_TRUST_HOST=true`.
+
+The lease lives in Postgres, so correctness doesn't depend on how many serverless instances
+run.
 
 ---
 
