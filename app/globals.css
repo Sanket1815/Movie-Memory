@@ -1,0 +1,264 @@
+@import "tailwindcss";
+
+/* ---------------------------------------------------------------------------
+   Theme: "midnight cinema". Tokens become Tailwind utilities, e.g. bg-night-900,
+   text-popcorn, font-display, animate-float.
+   --------------------------------------------------------------------------- */
+@theme {
+  --color-night-950: #0b0716;
+  --color-night-900: #140d29;
+  --color-night-800: #1e1540;
+  --color-night-700: #2c2158;
+  --color-night-600: #3d3074;
+  --color-popcorn: #ffc83d;
+  --color-popcorn-soft: #ffe7a3;
+  --color-cherry: #ff4f79;
+  --color-mint: #35e0a1;
+  --color-sky: #7cc7ff;
+  --color-cream: #fff7e8;
+  --color-muted: #b9aee0;
+
+  --font-display: var(--font-fredoka), ui-rounded, system-ui, sans-serif;
+  --font-sans: var(--font-geist-sans), system-ui, sans-serif;
+
+  --animate-float: float 6s ease-in-out infinite;
+  --animate-pop-in: pop-in 500ms cubic-bezier(0.2, 0.9, 0.3, 1.35) both;
+  --animate-shimmer: shimmer 1.6s linear infinite;
+  --animate-wiggle: wiggle 1.2s ease-in-out infinite;
+
+  @keyframes float {
+    0%, 100% { transform: translateY(0) rotate(var(--tilt, 0deg)); }
+    50% { transform: translateY(-14px) rotate(calc(var(--tilt, 0deg) * -1)); }
+  }
+  @keyframes pop-in {
+    from { opacity: 0; transform: translateY(12px) scale(0.96); }
+    to { opacity: 1; transform: none; }
+  }
+  @keyframes shimmer {
+    from { background-position: -200% 0; }
+    to { background-position: 200% 0; }
+  }
+  @keyframes wiggle {
+    0%, 100% { transform: rotate(0deg); }
+    25% { transform: rotate(-12deg); }
+    75% { transform: rotate(12deg); }
+  }
+  @keyframes bulbs {
+    0%, 49% { opacity: 1; }
+    50%, 100% { opacity: 0.25; }
+  }
+}
+
+html {
+  color-scheme: dark;
+}
+
+body {
+  background-color: var(--color-night-950);
+  /* Two soft "spotlights" over the night background. */
+  background-image:
+    radial-gradient(ellipse 60% 45% at 15% -5%, rgb(124 199 255 / 0.18), transparent 70%),
+    radial-gradient(ellipse 55% 45% at 90% 0%, rgb(255 79 121 / 0.16), transparent 70%),
+    radial-gradient(ellipse 80% 60% at 50% 110%, rgb(255 200 61 / 0.1), transparent 70%);
+  background-attachment: fixed;
+  color: var(--color-cream);
+  font-family: var(--font-sans);
+}
+
+/* Subtle film grain over everything (decorative, ignores the pointer). */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  pointer-events: none;
+  opacity: 0.07;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+}
+
+::selection {
+  background: var(--color-popcorn);
+  color: var(--color-night-950);
+}
+
+/* ---------------------------------------------------------------------------
+   Components
+   --------------------------------------------------------------------------- */
+
+/* Chunky, playful primary button with an offset "sticker" shadow. */
+@utility btn-pop {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  border-radius: 9999px;
+  border: 2px solid var(--color-night-950);
+  background: var(--color-popcorn);
+  color: var(--color-night-950);
+  font-family: var(--font-display);
+  font-weight: 600;
+  box-shadow: 4px 4px 0 var(--pop-shadow, var(--color-cherry));
+  transition: transform 150ms ease, box-shadow 150ms ease, background-color 150ms ease;
+  &:hover:not(:disabled) {
+    transform: translate(-2px, -2px);
+    box-shadow: 6px 6px 0 var(--pop-shadow, var(--color-cherry));
+    background: var(--color-popcorn-soft);
+  }
+  &:active:not(:disabled) {
+    transform: translate(3px, 3px);
+    box-shadow: 1px 1px 0 var(--pop-shadow, var(--color-cherry));
+  }
+  &:focus-visible {
+    outline: 3px solid var(--color-sky);
+    outline-offset: 3px;
+  }
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+  }
+}
+
+/* Quiet secondary button. */
+@utility btn-ghost {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border-radius: 9999px;
+  border: 2px solid rgb(255 247 232 / 0.25);
+  color: var(--color-cream);
+  font-family: var(--font-display);
+  font-weight: 500;
+  transition: background-color 150ms ease, border-color 150ms ease, transform 150ms ease;
+  &:hover:not(:disabled) {
+    background: rgb(255 247 232 / 0.08);
+    border-color: rgb(255 247 232 / 0.5);
+    transform: translateY(-1px);
+  }
+  &:focus-visible {
+    outline: 3px solid var(--color-sky);
+    outline-offset: 3px;
+  }
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.55;
+  }
+}
+
+/* Glassy panel used for cards. */
+@utility panel {
+  border-radius: 1.75rem;
+  border: 1px solid rgb(255 247 232 / 0.1);
+  background: linear-gradient(160deg, rgb(44 33 88 / 0.75), rgb(20 13 41 / 0.85));
+  box-shadow:
+    0 1px 0 rgb(255 255 255 / 0.06) inset,
+    0 24px 60px -20px rgb(0 0 0 / 0.6);
+  backdrop-filter: blur(8px);
+}
+
+/* Cinema marquee: a ring of bulbs around the edge that "chase".
+   How it works: both pseudo-elements tile a 44px cell with two bulbs, and the mask keeps
+   only a 22px ring at the edge, so exactly one row/column of bulbs shows on each side.
+   ::before has bulbs at (11,11)+(33,33), ::after at (33,11)+(11,33): along every edge
+   they alternate, and blinking them out of phase reads as chasing lights.
+   `background-repeat: round` stretches the tile slightly so bulbs never get clipped. */
+@utility marquee {
+  position: relative;
+  isolation: isolate;
+  border-radius: 2rem;
+  border: 3px solid var(--color-popcorn);
+  background: linear-gradient(180deg, var(--color-night-800), var(--color-night-900));
+  box-shadow:
+    0 0 0 6px var(--color-night-950),
+    0 0 0 9px rgb(255 200 61 / 0.35),
+    0 0 60px rgb(255 200 61 / 0.25);
+  --bulb: var(--color-popcorn-soft) 0 2.5px, rgb(255 200 61 / 0.55) 3.5px, transparent 4.5px;
+  &::before,
+  &::after {
+    content: "";
+    position: absolute;
+    inset: 4px;
+    z-index: -1;
+    border-radius: 1.6rem;
+    padding: 22px;
+    background-size: 44px 44px;
+    background-repeat: round;
+    mask:
+      linear-gradient(#000 0 0) content-box exclude,
+      linear-gradient(#000 0 0);
+    animation: bulbs 1.2s steps(1, end) infinite;
+  }
+  &::before {
+    background-image:
+      radial-gradient(circle at 11px 11px, var(--bulb)),
+      radial-gradient(circle at 33px 33px, var(--bulb));
+  }
+  &::after {
+    background-image:
+      radial-gradient(circle at 33px 11px, var(--bulb)),
+      radial-gradient(circle at 11px 33px, var(--bulb));
+    animation-delay: 0.6s;
+  }
+}
+
+/* Movie ticket: notches cut out of both sides. */
+@utility ticket {
+  position: relative;
+  border-radius: 1.25rem;
+  background: linear-gradient(135deg, var(--color-cherry), #ff7a59);
+  color: var(--color-night-950);
+  --notch: 16px;
+  mask:
+    radial-gradient(circle var(--notch) at 0 50%, transparent 98%, #000) left / 51% 100% no-repeat,
+    radial-gradient(circle var(--notch) at 100% 50%, transparent 98%, #000) right / 51% 100% no-repeat;
+}
+
+/* Film strip: sprocket holes along the top and bottom edges. */
+@utility film-strip {
+  position: relative;
+  border-radius: 1.25rem;
+  background: var(--color-night-950);
+  padding: 26px 14px;
+  box-shadow: 0 24px 60px -20px rgb(0 0 0 / 0.7);
+  &::before,
+  &::after {
+    content: "";
+    position: absolute;
+    left: 14px;
+    right: 14px;
+    height: 10px;
+    border-radius: 3px;
+    background-image: repeating-linear-gradient(
+      90deg,
+      rgb(255 247 232 / 0.85) 0 12px,
+      transparent 12px 26px
+    );
+    opacity: 0.55;
+  }
+  &::before { top: 8px; }
+  &::after { bottom: 8px; }
+}
+
+/* Shimmering skeleton bar. */
+@utility skeleton {
+  border-radius: 9999px;
+  background: linear-gradient(
+    90deg,
+    rgb(255 247 232 / 0.06) 25%,
+    rgb(255 247 232 / 0.18) 50%,
+    rgb(255 247 232 / 0.06) 75%
+  );
+  background-size: 200% 100%;
+  animation: var(--animate-shimmer);
+}
+
+/* Respect users who ask for less motion. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}

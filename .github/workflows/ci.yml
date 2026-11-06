@@ -1,0 +1,70 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# Cancel an older run on the same branch when a newer commit is pushed.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: movie
+          POSTGRES_PASSWORD: movie
+          POSTGRES_DB: movie_memory_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U movie -d movie_memory_test"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 10
+
+    env:
+      # Tests only ever use the *_test database (tests/helpers/db.ts refuses anything else).
+      DATABASE_URL: postgresql://movie:movie@localhost:5432/movie_memory_test?schema=public
+      DATABASE_URL_TEST: postgresql://movie:movie@localhost:5432/movie_memory_test?schema=public
+      # Placeholders, not secrets: lib/env.ts requires these to be set, but CI never calls
+      # Google or OpenAI (tests mock both, and `next build` makes no requests).
+      AUTH_SECRET: ci-placeholder-auth-secret
+      AUTH_GOOGLE_ID: ci-placeholder-google-id
+      AUTH_GOOGLE_SECRET: ci-placeholder-google-secret
+      OPENAI_API_KEY: ci-placeholder-openai-key
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      # postinstall runs `prisma generate`, so the Prisma client exists after this step.
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      # Applies migrations to the test database first (tests/global-setup.ts).
+      - name: Test
+        run: npm test
+
+      - name: Build
+        run: npm run build

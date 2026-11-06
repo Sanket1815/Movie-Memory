@@ -1,0 +1,24 @@
+# Local Postgres for development and tests.
+# Host port 54330 (not 5432) avoids clashing with any Postgres already running locally.
+services:
+  db:
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: movie
+      POSTGRES_PASSWORD: movie
+      POSTGRES_DB: movie_memory
+    ports:
+      - "54330:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      # Creates the separate test database on first start.
+      - ./docker/init-test-db.sql:/docker-entrypoint-initdb.d/init-test-db.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U movie -d movie_memory"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  pgdata:
