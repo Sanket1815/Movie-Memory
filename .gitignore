@@ -37,6 +37,9 @@ yarn-error.log*
 # prisma generated client
 /generated/
 
+# private demo / interview prep material (never pushed)
+/demo/
+
 # vercel
 .vercel
 

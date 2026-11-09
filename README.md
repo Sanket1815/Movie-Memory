@@ -6,7 +6,7 @@ Built with Next.js 16 (App Router), React 19, Tailwind 4, PostgreSQL 16, Prisma 
 Auth.js v5 (Google) and the OpenAI API. Implements the base app plus **Variant A
 (backend: caching and correctness)**.
 
-> **Live app:** https://VERCEL_URL_HERE
+> **Live app:** https://movie-memory-rose.vercel.app
 > (sign-in is limited to Google test users while the OAuth app is in "Testing"; ask for access)
 >
 > **Repository:** https://github.com/Sanket1815/Movie-Memory
@@ -462,7 +462,7 @@ the production build on every push and pull request.
 
 ## 10. Deployment (Vercel + Neon)
 
-**Production:** https://VERCEL_URL_HERE — deployed on Vercel, database on Neon
+**Production:** https://movie-memory-rose.vercel.app — deployed on Vercel, database on Neon
 (serverless Postgres). Every push to `main` triggers a new deployment.
 
 ### How it was deployed
@@ -497,8 +497,8 @@ the production build on every push and pull request.
    DATABASE_URL="<DATABASE_URL_UNPOOLED>" npx prisma migrate deploy   # macOS / Linux
    ```
 5. **Google OAuth:** in the same OAuth client, add
-   - Authorized JavaScript origin: `https://VERCEL_URL_HERE`
-   - Authorized redirect URI: `https://VERCEL_URL_HERE/api/auth/callback/google`
+   - Authorized JavaScript origin: `https://movie-memory-rose.vercel.app`
+   - Authorized redirect URI: `https://movie-memory-rose.vercel.app/api/auth/callback/google`
 
    While the consent screen is in "Testing", only listed test users can sign in; **Publish
    app** for public access (only basic profile/email scopes, so no Google verification).

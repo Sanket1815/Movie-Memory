@@ -32,6 +32,7 @@ export default async function DashboardPage() {
                 alt={`${name}'s profile photo`}
                 width={64}
                 height={64}
+                loading="eager"
                 className="size-16 rounded-full border-2 border-night-900"
               />
             ) : (

@@ -1,5 +1,3 @@
-// Prisma 7: the connection URL lives in prisma.config.ts, and the client is generated
-// into ./generated (gitignored, rebuilt by `npm install` via postinstall).
 generator client {
   provider = "prisma-client"
   output   = "../generated/prisma"
@@ -9,10 +7,6 @@ datasource db {
   provider = "postgresql"
 }
 
-// ---------------------------------------------------------------------------
-// Auth.js tables (shape required by @auth/prisma-adapter)
-// ---------------------------------------------------------------------------
-
 model User {
   id            String    @id @default(cuid())
   name          String?
@@ -20,9 +14,7 @@ model User {
   emailVerified DateTime?
   image         String?
 
-  // One favorite movie per user, so it is a column rather than its own table.
-  // NULL means "hasn't onboarded yet"; that is how first-time users are detected.
-  // VarChar(100) mirrors the Zod max length, so the DB enforces it too.
+  
   favoriteMovie String? @db.VarChar(100)
 
   accounts  Account[]
