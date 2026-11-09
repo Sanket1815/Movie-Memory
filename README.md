@@ -7,7 +7,6 @@ Auth.js v5 (Google) and the OpenAI API. Implements the base app plus **Variant A
 (backend: caching and correctness)**.
 
 > **Live app:** https://movie-memory-rose.vercel.app
-> (sign-in is limited to Google test users while the OAuth app is in "Testing"; ask for access)
 >
 > **Repository:** https://github.com/Sanket1815/Movie-Memory
 >
