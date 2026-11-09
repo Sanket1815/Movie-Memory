@@ -11,7 +11,7 @@ Auth.js v5 (Google) and the OpenAI API. Implements the base app plus **Variant A
 >
 > **Repository:** https://github.com/Sanket1815/Movie-Memory
 >
-> **Demo video:** _link to be added_
+> **Demo video:** https://drive.google.com/file/d/1jyeyUzjaWp8X9N0BY7VvrEhgbETha_XU/view?usp=sharing
 
 ---
 
@@ -526,4 +526,3 @@ run.
   gap (the re-check race) found by mutation testing.
 - Generated test scaffolding and drafted this README; I verified behavior by running the
   suites, manual browser checks, and a clean-clone CI dry run.
-- _Your own notes here._
